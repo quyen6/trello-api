@@ -20,14 +20,10 @@ const createNew = async (req, res, next) => {
   });
 
   try {
-    console.log(`req.body: `, req.body);
-
     // Chỉ định abortEarly: false trong trường hợp nhiều lỗi Validation thì trả về tất cả lỗi
     await correctCondition.validateAsync(req.body, { abortEarly: false });
-    // next()
-    res
-      .status(StatusCodes.CREATED)
-      .json({ message: "POST from validation : API v1 create " });
+    // Validate dữ liệu xong xuôi hợp lệ thì cho request đi tiếp sang Controller
+    next();
   } catch (error) {
     console.log(error);
     res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
