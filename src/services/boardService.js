@@ -3,6 +3,9 @@ import { StatusCodes } from "http-status-codes";
 import { slugify } from "~/utils/formatters";
 import { boardModel } from "~/models/boardModel";
 import ApiError from "~/utils/ApiError";
+import _ from "lodash";
+// import { cloneDeep } from "lodash";
+
 const createNew = async (reqBody) => {
   try {
     // Xử lý logic dữ liệu tùy đặc thù dự án
@@ -36,7 +39,23 @@ const getDetails = async (boardId) => {
       throw new ApiError(StatusCodes.NOT_FOUND, "Board not found!");
     }
 
-    return board;
+    const resBoard = _.cloneDeep(board);
+    // Đưa Card về đúng Column
+
+    // MongoDB có support hàm equals
+    resBoard.columns.forEach((column) => {
+      column.cards = resBoard.cards.filter((card) =>
+        card.columnId.equals(column._id)
+      );
+
+      // column.cards = resBoard.cards.filter(
+      //   (card) => card.columnId.toString() === column._id.toString()
+      // );
+    });
+
+    delete resBoard.cards;
+
+    return resBoard;
   } catch (error) {
     throw error;
   }

@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { StatusCodes } from "http-status-codes";
 import ApiError from "~/utils/ApiError";
+import { BOARD_TYPE } from "~/utils/constants";
 
 const createNew = async (req, res, next) => {
   /**
@@ -18,6 +19,7 @@ const createNew = async (req, res, next) => {
       // ....
     }),
     description: Joi.string().required().min(3).max(256).trim().strict(),
+    type: Joi.string().valid(BOARD_TYPE.PUBLIC, BOARD_TYPE.PRIVATE).required(),
   });
 
   try {
