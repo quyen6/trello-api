@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
 import express from "express";
+import cors from "cors";
+import { corsOptions } from "~/config/cors";
 import exitHook from "async-exit-hook";
 import { CONNECT_DB, CLOSE_DB } from "~/config/mongodb";
 
@@ -8,6 +10,9 @@ import { APIs_V1 } from "~/routes/v1";
 import { errorHandlingMiddleware } from "~/middlewares/errorHandlingMiddleware";
 const START_SERVER = () => {
   const app = express();
+
+  //Xử lý CORS
+  app.use(cors(corsOptions));
 
   // Enable req.body json data
   app.use(express.json());
@@ -25,7 +30,7 @@ const START_SERVER = () => {
   app.listen(env.APP_PORT, env.APP_HOST, () => {
     // eslint-disable-next-line no-console
     console.log(
-      `3. Hello ${env.AUTHOR}, I am running at ${env.APP_HOST}:${env.APP_PORT}/`
+      `3. Hello ${env.AUTHOR}, I am running at ${env.APP_HOST}:${env.APP_PORT}`
     );
   });
 
