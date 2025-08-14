@@ -3,6 +3,8 @@ import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
 import { GET_DB } from "~/config/mongodb";
 import { ObjectId } from "mongodb";
 // Define Collection (name & schema)
+const INVALID_UPDATE_FIELDS = ["_id", "boardId", "createdAt"];
+
 const COLUMN_COLLECTION_NAME = "columns";
 const COLUMN_COLLECTION_SCHEMA = Joi.object({
   boardId: Joi.string()
@@ -71,11 +73,31 @@ const pushCardOrderIds = async (card) => {
     throw new Error(error);
   }
 };
-
+const update = async (columnId, updateData) => {
+  try {
+    // Lọc những field mà chúng ta không cho cập nhật linh tinh
+    Object.keys(updateData).forEach((item) => {
+      if (INVALID_UPDATE_FIELDS.includes(item)) {
+        delete updateData[item];
+      }
+    });
+    const result = await GET_DB()
+      .collection(COLUMN_COLLECTION_NAME)
+      .findOneAndUpdate(
+        { _id: new ObjectId(columnId) },
+        { $set: updateData },
+        { ReturnDocument: "after" } // trả về kết quả mới sau khi cập nhật
+      );
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 export const columnModel = {
   COLUMN_COLLECTION_NAME,
   COLUMN_COLLECTION_SCHEMA,
   createNew,
   findOneById,
   pushCardOrderIds,
+  update,
 };
