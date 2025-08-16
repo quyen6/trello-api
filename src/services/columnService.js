@@ -41,7 +41,19 @@ const update = async (columnId, reqBody) => {
     throw error;
   }
 };
+const deleteItem = async (columnId) => {
+  try {
+    // Xóa Column
+
+    // Xóa toàn bộ Cards thuộc cái Column trên
+
+    return { deleteResult: "Delete Column is success!" };
+  } catch (error) {
+    throw error;
+  }
+};
 export const columnService = {
   createNew,
   update,
+  deleteItem,
 };

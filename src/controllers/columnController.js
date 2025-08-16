@@ -14,7 +14,6 @@ const createNew = async (req, res, next) => {
 };
 const update = async (req, res, next) => {
   try {
-    console.log(`req.params: `, req.params);
     const columnId = req.params.id;
 
     const updatedColumn = await columnService.update(columnId, req.body);
@@ -25,7 +24,20 @@ const update = async (req, res, next) => {
     next(error);
   }
 };
+const deleteItem = async (req, res, next) => {
+  try {
+    const columnId = req.params.id;
+
+    const result = await columnService.deleteItem(columnId, req.body);
+
+    // Có kết quả thì trả về Client
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 export const columnController = {
   createNew,
   update,
+  deleteItem,
 };
