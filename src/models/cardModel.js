@@ -3,6 +3,7 @@ import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
 import { GET_DB } from "~/config/mongodb";
 import { ObjectId } from "mongodb";
 // Define Collection (name & schema)
+const INVALID_UPDATE_FIELDS = ["_id", "boardId", "createdAt"];
 const CARD_COLLECTION_NAME = "cards";
 const CARD_COLLECTION_SCHEMA = Joi.object({
   boardId: Joi.string()
@@ -57,10 +58,35 @@ const findOneById = async (id) => {
     throw new Error(error);
   }
 };
+const update = async (cardId, updateData) => {
+  try {
+    // Lọc những field mà chúng ta không cho cập nhật linh tinh
+    Object.keys(updateData).forEach((item) => {
+      if (INVALID_UPDATE_FIELDS.includes(item)) {
+        delete updateData[item];
+      }
+    });
+    // Đối với những dữ liệu liên quan đến ObjectId , biến đổi ở đây
+    if (updateData.columnId) {
+      updateData.columnId = new ObjectId(updateData.columnId);
+    }
 
+    const result = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        { _id: new ObjectId(cardId) },
+        { $set: updateData },
+        { ReturnDocument: "after" } // trả về kết quả mới sau khi cập nhật
+      );
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 export const cardModel = {
   CARD_COLLECTION_NAME,
   CARD_COLLECTION_SCHEMA,
   createNew,
   findOneById,
+  update,
 };

@@ -3,10 +3,6 @@ import ApiError from "~/utils/ApiError";
 import { boardService } from "~/services/boardService";
 const createNew = async (req, res, next) => {
   try {
-    console.log(`req.body: `, req.body);
-    console.log(`req.query: `, req.query);
-    console.log(`req.params: `, req.params);
-
     // Điều hướng dữ liệu sang tầng Service
     const createNewBoard = await boardService.createNew(req.body);
 
@@ -32,7 +28,6 @@ const getDetails = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
-    console.log(`req.params: `, req.params);
     const boardId = req.params.id;
 
     const updatedBoard = await boardService.update(boardId, req.body);
@@ -43,9 +38,20 @@ const update = async (req, res, next) => {
     next(error);
   }
 };
+const moveCardToDifferentColumn = async (req, res, next) => {
+  try {
+    const result = await boardService.moveCardToDifferentColumn(req.body);
+
+    // Có kết quả thì trả về Client
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const boardController = {
   createNew,
   getDetails,
   update,
+  moveCardToDifferentColumn,
 };

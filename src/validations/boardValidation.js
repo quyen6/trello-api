@@ -68,8 +68,48 @@ const update = async (req, res, next) => {
     );
   }
 };
+const moveCardToDifferentColumn = async (req, res, next) => {
+  // Không required() trong trường update
+  const correctCondition = Joi.object({
+    curentCardId: Joi.string()
+      .required()
+      .pattern(OBJECT_ID_RULE)
+      .message(OBJECT_ID_RULE_MESSAGE),
+    prevColumnId: Joi.string()
+      .required()
+      .pattern(OBJECT_ID_RULE)
+      .message(OBJECT_ID_RULE_MESSAGE),
+    prevCardOrderIds: Joi.array()
+      .required()
+      .items(
+        Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+      ),
+    nextColumnId: Joi.string()
+      .required()
+      .pattern(OBJECT_ID_RULE)
+      .message(OBJECT_ID_RULE_MESSAGE),
+    nextCardOrderIds: Joi.array()
+      .required()
+      .items(
+        Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+      ),
+  });
+
+  try {
+    // Chỉ định abortEarly: false trong trường hợp nhiều lỗi Validation thì trả về tất cả lỗi
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false,
+    });
+    next();
+  } catch (error) {
+    next(
+      new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message)
+    );
+  }
+};
 
 export const boardValidation = {
   createNew,
   update,
+  moveCardToDifferentColumn,
 };
