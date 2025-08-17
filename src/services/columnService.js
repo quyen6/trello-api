@@ -1,6 +1,9 @@
 /* eslint-disable no-useless-catch */
+import { StatusCodes } from "http-status-codes";
 import { boardModel } from "~/models/boardModel";
+import { cardModel } from "~/models/cardModel";
 import { columnModel } from "~/models/columnModel";
+import ApiError from "~/utils/ApiError";
 // import { cloneDeep } from "lodash";
 
 const createNew = async (reqBody) => {
@@ -43,10 +46,16 @@ const update = async (columnId, reqBody) => {
 };
 const deleteItem = async (columnId) => {
   try {
+    const targetColumn = await columnModel.findOneById(columnId);
+    if (!targetColumn) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Column not found!");
+    }
     // Xóa Column
-
+    await columnModel.deleteOneById(columnId);
     // Xóa toàn bộ Cards thuộc cái Column trên
-
+    await cardModel.deleteAllCardByColumnId(columnId);
+    // Xóa columnId trong mảng columnOrderIds của cái Board
+    await boardModel.pullColumnOrderIds(targetColumn);
     return { deleteResult: "Delete Column is success!" };
   } catch (error) {
     throw error;
