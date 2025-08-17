@@ -1,5 +1,4 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "~/utils/ApiError";
 import { boardService } from "~/services/boardService";
 const createNew = async (req, res, next) => {
   try {
@@ -14,7 +13,6 @@ const createNew = async (req, res, next) => {
 };
 const getDetails = async (req, res, next) => {
   try {
-    console.log(`req.params: `, req.params);
     const boardId = req.params.id;
 
     const board = await boardService.getDetails(boardId);
