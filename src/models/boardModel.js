@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { ObjectId, ReturnDocument } from "mongodb";
+import { ObjectId } from "mongodb";
 import { GET_DB } from "~/config/mongodb";
 import { BOARD_TYPE } from "~/utils/constants";
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
@@ -35,7 +35,6 @@ const validateBeforeCreate = async (data) => {
 const createNew = async (data) => {
   try {
     const validData = await validateBeforeCreate(data);
-    console.log("🚀 ~ createNew ~ validData:", validData);
     const createdBoard = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
       .insertOne(validData);
@@ -44,12 +43,12 @@ const createNew = async (data) => {
     throw new Error(error);
   }
 };
-const findOneById = async (id) => {
+const findOneById = async (boardId) => {
   try {
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
       .findOne({
-        _id: new ObjectId(id),
+        _id: new ObjectId(boardId),
       });
     return result;
   } catch (error) {
@@ -113,6 +112,22 @@ const pushColumnOrderIds = async (column) => {
     throw new Error(error);
   }
 };
+// Lấy 1 phần tử columnId ra khỏi mảng columnOrderIds
+// Dùng $pull trong mongodb ở trường hợp này để lấy một phần tử ra khỏi mảng rồi xóa nó đi
+const pullColumnOrderIds = async (column) => {
+  try {
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        { _id: new ObjectId(column.boardId) },
+        { $pull: { columnOrderIds: new ObjectId(column._id) } },
+        { ReturnDocument: "after" }
+      );
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 
 const update = async (boardId, updateData) => {
   try {
@@ -149,8 +164,5 @@ export const boardModel = {
   getDetails,
   pushColumnOrderIds,
   update,
+  pullColumnOrderIds,
 };
-
-// boardId: 6895d82b215dae5ac43ed80f
-// columnsId: 689603b36f13cb870d3b4095
-// cardId : 689604a96f13cb870d3b4097

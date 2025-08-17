@@ -58,6 +58,7 @@ const findOneById = async (id) => {
     throw new Error(error);
   }
 };
+
 const update = async (cardId, updateData) => {
   try {
     // Lọc những field mà chúng ta không cho cập nhật linh tinh
@@ -83,10 +84,25 @@ const update = async (cardId, updateData) => {
     throw new Error(error);
   }
 };
+
+const deleteAllCardByColumnId = async (columnId) => {
+  try {
+    const result = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .deleteMany({
+        columnId: new ObjectId(columnId),
+      });
+
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 export const cardModel = {
   CARD_COLLECTION_NAME,
   CARD_COLLECTION_SCHEMA,
   createNew,
   findOneById,
   update,
+  deleteAllCardByColumnId,
 };
