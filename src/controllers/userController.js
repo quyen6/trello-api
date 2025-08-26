@@ -1,4 +1,5 @@
 import { StatusCodes } from "http-status-codes";
+import ms from "ms";
 import { userService } from "~/services/userService";
 const createNew = async (req, res, next) => {
   try {
@@ -27,7 +28,24 @@ const login = async (req, res, next) => {
     // Điều hướng dữ liệu sang tầng Service
     const result = await userService.login(req.body);
 
-    // Xử lý về http only cookie cho phía trình duyệt
+    /**
+     * XỬ lý trả về http only cookie cho phía trình duyệt
+     * Về cái maxAge và thư viện ms: https://expressjs.com/en/api.html
+     * Đối với maxAge - thời gian sống của Cookie thì chúng ta sẽ để tối đa 14 ngày, tùy dự án. Lưu ý thời gian sống của cookie khác với thời gian sống của token nhé!
+     */
+
+    res.cookie("accessToken", result.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: ms("14 days"),
+    });
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: ms("14 days"),
+    });
     // console.log("🚀 ~ login ~ result:", result);
     res.status(StatusCodes.OK).json(result);
   } catch (error) {
