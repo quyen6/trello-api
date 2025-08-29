@@ -26,6 +26,7 @@ const isAuthorized = async (req, res, next) => {
     // console.log("🚀 ~ isAuthorized ~ accessTokenDecoded:", accessTokenDecoded);
 
     // 2. Quan trọng: Nếu như cái token hợp lệ, thì sẽ cần phải lưu thông tin giải mã được vào cái req.JwtDecoded, để sử dụng cho các tầng cần xử lý ở phía sau
+    // jwtDecoded là cái chúng ta tự define
     req.jwtDecoded = accessTokenDecoded;
 
     // 3. Cho phép các request đi tiếp

@@ -163,10 +163,52 @@ const refreshToken = async (clientRefreshToken) => {
     throw error;
   }
 };
+const update = async (userId, reqBody) => {
+  try {
+    // Query user trong Database
+    const existUser = await userModel.findOneById(userId);
 
+    // Các bước kiểm tra cần thiết
+    if (!existUser)
+      throw new ApiError(StatusCodes.NOT_FOUND, "Account not found!");
+    // Nếu account đã được active thì bắn lỗi
+    if (!existUser.isActive)
+      throw new ApiError(
+        StatusCodes.NOT_ACCEPTABLE,
+        "Your account is not active"
+      );
+
+    // Khởi tạo kết quả updated User ban đầu là empty
+    let updatedUser = {};
+
+    // Trường hợp check password
+    if (reqBody.current_password && reqBody.new_password) {
+      // kiểm tra xem current password có đúng hay không
+      if (!bcryptjs.compareSync(reqBody.current_password, existUser.password)) {
+        throw new ApiError(
+          StatusCodes.NOT_ACCEPTABLE,
+          "Your password is incorrect"
+        );
+      } else {
+        // Nếu current password đúng ta sẽ hash mật khẩu mới và update vào DB:
+        updatedUser = await userModel.update(userId, {
+          password: bcryptjs.hashSync(reqBody.new_password, 8),
+        });
+      }
+    } else {
+      // Trường hợp update các thông tin chung
+      updatedUser = await userModel.update(userId, reqBody);
+    }
+    console.log("🚀 ~ update ~ updatedUser:", updatedUser);
+    return pickUser(updatedUser);
+  } catch (error) {
+    throw error;
+  }
+};
 export const userService = {
   createNew,
   verifyAccount,
   login,
   refreshToken,
+  update,
 };
