@@ -87,7 +87,7 @@ const update = async (userId, updateData) => {
       .findOneAndUpdate(
         { _id: new ObjectId(userId) },
         { $set: updateData },
-        { ReturnDocument: "after" } // trả về kết quả mới sau khi cập nhật
+        { returnDocument: "after" } // trả về kết quả mới sau khi cập nhật
       );
     return result;
   } catch (error) {
