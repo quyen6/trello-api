@@ -7,9 +7,7 @@ import { authMiddleware } from "~/middlewares/authMiddleware";
 const Router = express.Router();
 
 Router.route("/")
-  .get(authMiddleware.isAuthorized, (req, res) => {
-    res.status(StatusCodes.OK).json({ message: "API v1 get list board " });
-  })
+  .get(authMiddleware.isAuthorized, boardController.getBoards)
   .post(
     authMiddleware.isAuthorized,
     boardValidation.createNew,
@@ -30,4 +28,5 @@ Router.route("/supports/moving_card").put(
   boardValidation.moveCardToDifferentColumn,
   boardController.moveCardToDifferentColumn
 );
+
 export const boardRoute = Router;
