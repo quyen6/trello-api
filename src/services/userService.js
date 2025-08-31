@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { env } from "~/config/environment";
 import { userModel } from "~/models/userModel";
 import { BrevoProvider } from "~/providers/BrevoProvider";
+import { CloudinaryProvider } from "~/providers/CloundinaryProvider";
 import { JwtProvider } from "~/providers/JwtProvider";
 import ApiError from "~/utils/ApiError";
 import { WEBSITE_DOMAIN } from "~/utils/constants";
@@ -139,10 +140,6 @@ const refreshToken = async (clientRefreshToken) => {
       clientRefreshToken,
       env.REFRESH_TOKEN_SECRET_SIGNATURE
     );
-    console.log(
-      "🚀 ~ refreshToken ~ refreshTokenDecoded:",
-      refreshTokenDecoded
-    );
 
     // Đoạn này vì chúng ta chỉ lưu những thông tin unique và cố định của user trong token rồi, vì vậy có thể lấy luôn từ decoded ra, tiết kiệm query vào DB để lấy data mới
     const userInfo = {
@@ -163,7 +160,7 @@ const refreshToken = async (clientRefreshToken) => {
     throw error;
   }
 };
-const update = async (userId, reqBody) => {
+const update = async (userId, reqBody, userAvatarFile) => {
   try {
     // Query user trong Database
     const existUser = await userModel.findOneById(userId);
@@ -195,11 +192,21 @@ const update = async (userId, reqBody) => {
           password: bcryptjs.hashSync(reqBody.new_password, 8),
         });
       }
+    } else if (userAvatarFile) {
+      // Trường hợp upload file lên Cloud Storage, cụ thể Cloudinary
+      const uploadResult = await CloudinaryProvider.streamUpload(
+        userAvatarFile.buffer,
+        "users"
+      );
+
+      // Lưu lại URL (secure_url) của file ảnh vào trong DB
+      updatedUser = await userModel.update(existUser._id, {
+        avatar: uploadResult.secure_url,
+      });
     } else {
       // Trường hợp update các thông tin chung
       updatedUser = await userModel.update(userId, reqBody);
     }
-    console.log("🚀 ~ update ~ updatedUser:", updatedUser);
     return pickUser(updatedUser);
   } catch (error) {
     throw error;
