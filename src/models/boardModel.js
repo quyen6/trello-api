@@ -41,12 +41,17 @@ const validateBeforeCreate = async (data) => {
   });
 };
 
-const createNew = async (data) => {
+const createNew = async (userId, data) => {
   try {
     const validData = await validateBeforeCreate(data);
+    const newBoardToAdd = {
+      ...validData,
+      ownerIds: [new ObjectId(userId)],
+    };
+
     const createdBoard = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
-      .insertOne(validData);
+      .insertOne(newBoardToAdd);
     return createdBoard;
   } catch (error) {
     throw new Error(error);
@@ -65,20 +70,26 @@ const findOneById = async (boardId) => {
   }
 };
 //Query tổng hợp (aggregate) để lấy toàn bộ Columns và Cards thuộc về Board
-const getDetails = async (id) => {
+const getDetails = async (userId, boardId) => {
   try {
-    // const result = await GET_DB()
-    //   .collection(BOARD_COLLECTION_NAME)
-    //   .findOne({
-    //     _id: new ObjectId(id),
-    //   });
+    const queryConditons = [
+      { _id: new ObjectId(boardId) },
+      // Điều kiện 01: Board chưa bị xóa
+      { _destroy: false },
+      // Điều kiện thứ 02: userId đang thực hiện request này nó phải thuộc vào một trong 2 cái mảng ownerIds hoặc memberIds, sư dụng toán từ $all của mongodb
+      {
+        $or: [
+          { ownerIds: { $all: [new ObjectId(userId)] } },
+          { memberIds: { $all: [new ObjectId(userId)] } },
+        ],
+      },
+    ];
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
       .aggregate([
         {
           $match: {
-            _id: new ObjectId(id),
-            _destroy: false,
+            $and: queryConditons,
           },
         },
         {

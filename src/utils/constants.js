@@ -8,8 +8,8 @@ export const WHITELIST_DOMAINS = [
 // không cần localhost nữa vì ở file config/cors đã luôn luôn cho phép môi trường dev
 
 export const BOARD_TYPE = {
-  PUBLIC: "Public",
-  PRIVATE: "Private",
+  PUBLIC: "public",
+  PRIVATE: "private",
 };
 
 export const WEBSITE_DOMAIN =
