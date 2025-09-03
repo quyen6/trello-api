@@ -13,8 +13,6 @@ import {
 // Function Kiểm tra loại file nào được chấp nhận
 
 const customFileFilter = (req, file, callback) => {
-  console.log("Multer File", file);
-
   // Đối với Multer kiểm tra kiểu file thì sử dụng mimetype
   if (!ALLOW_COMMON_FILE_TYPES.includes(file.mimetype)) {
     const errorMessage = "File type is invalid. Only accept jpg, jpeg and png";
