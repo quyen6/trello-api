@@ -25,7 +25,27 @@ const createNew = async (req, res, next) => {
     );
   }
 };
+const update = async (req, res, next) => {
+  // Không required() trong trường update
+  const correctCondition = Joi.object({
+    title: Joi.string().min(3).max(50).trim().strict(),
+    description: Joi.string().optional(),
+  });
 
+  try {
+    // Chỉ định abortEarly: false trong trường hợp nhiều lỗi Validation thì trả về tất cả lỗi
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true, // CHo phép trường hợp update cho phép Unknow để không cần đẩy 1 số field lên
+    });
+    next();
+  } catch (error) {
+    next(
+      new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message)
+    );
+  }
+};
 export const cardValidation = {
   createNew,
+  update,
 };
