@@ -19,7 +19,7 @@ const USER_COLLECTION_SCHEMA = Joi.object({
   displayName: Joi.string().required().trim().strict(),
   avatar: Joi.string().default(null),
   role: Joi.string()
-    .valid(USER_ROLE.CLIENT, USER_ROLE.ADMIN)
+    .valid(...Object.values(USER_ROLE))
     .default(USER_ROLE.CLIENT),
 
   isActive: Joi.boolean().default(false),
