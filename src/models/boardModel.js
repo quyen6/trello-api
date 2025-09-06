@@ -14,6 +14,7 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   title: Joi.string().required().min(3).max(50).trim().strict(),
   slug: Joi.string().required().min(3).trim().strict(),
   description: Joi.string().required().min(3).max(256).trim().strict(),
+  // type: Joi.string().valid(...Object.values(BOARD_TYPE)).required(), // thay vì gọi lần lượt có thể thay thế bằng ...Object.values() để sau này có thay đổi trong BOARD_TYPE thì cũng không cần đụng vào nữa
   type: Joi.string().valid(BOARD_TYPE.PUBLIC, BOARD_TYPE.PRIVATE).required(),
   // Lưu ý các item trong mảng cardOrderIds là ObjectId nên cần thêm pattern cho chuẩn nhé, (lúc quay video số 57 mình quên nhưng sang đầu video số 58 sẽ có nhắc lại về cái này.)
   columnOrderIds: Joi.array()
