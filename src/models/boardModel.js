@@ -147,7 +147,7 @@ const pushColumnOrderIds = async (column) => {
       .findOneAndUpdate(
         { _id: new ObjectId(column.boardId) },
         { $push: { columnOrderIds: new ObjectId(column._id) } },
-        { ReturnDocument: "after" }
+        { returnDocument: "after" }
       );
     return result;
   } catch (error) {
@@ -163,7 +163,7 @@ const pullColumnOrderIds = async (column) => {
       .findOneAndUpdate(
         { _id: new ObjectId(column.boardId) },
         { $pull: { columnOrderIds: new ObjectId(column._id) } },
-        { ReturnDocument: "after" }
+        { returnDocument: "after" }
       );
     return result;
   } catch (error) {
@@ -191,7 +191,7 @@ const update = async (boardId, updateData) => {
       .findOneAndUpdate(
         { _id: new ObjectId(boardId) },
         { $set: updateData },
-        { ReturnDocument: "after" } // trả về kết quả mới sau khi cập nhật
+        { returnDocument: "after" } // trả về kết quả mới sau khi cập nhật
       );
     return result;
   } catch (error) {
@@ -250,6 +250,21 @@ const getBoards = async (userId, page, itemsPerPage) => {
     throw new Error(error);
   }
 };
+
+const pushMemberIds = async (boardId, userId) => {
+  try {
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        { _id: new ObjectId(boardId) },
+        { $push: { memberIds: new ObjectId(userId) } },
+        { returnDocument: "after" }
+      );
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
@@ -260,4 +275,5 @@ export const boardModel = {
   update,
   pullColumnOrderIds,
   getBoards,
+  pushMemberIds,
 };
