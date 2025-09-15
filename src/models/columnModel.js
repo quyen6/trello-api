@@ -66,7 +66,7 @@ const pushCardOrderIds = async (card) => {
       .findOneAndUpdate(
         { _id: new ObjectId(card.columnId) },
         { $push: { cardOrderIds: new ObjectId(card._id) } },
-        { ReturnDocument: "after" }
+        { returnDocument: "after" }
       );
     return result;
   } catch (error) {
@@ -94,7 +94,7 @@ const update = async (columnId, updateData) => {
       .findOneAndUpdate(
         { _id: new ObjectId(columnId) },
         { $set: updateData },
-        { ReturnDocument: "after" } // trả về kết quả mới sau khi cập nhật
+        { returnDocument: "after" } // trả về kết quả mới sau khi cập nhật
       );
     return result;
   } catch (error) {
