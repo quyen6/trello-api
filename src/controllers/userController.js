@@ -56,11 +56,15 @@ const login = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
   try {
-    // Xóa cookie - đơn giản là làm ngược lại việc gán cookie ở hàm login
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    };
 
-    // Có kết quả thì trả về Client
+    res.clearCookie("accessToken", cookieOptions);
+    res.clearCookie("refreshToken", cookieOptions);
+
     res.status(StatusCodes.OK).json({ loggedOut: true });
   } catch (error) {
     next(error);
