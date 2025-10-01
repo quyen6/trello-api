@@ -10,10 +10,10 @@ const USER_ROLE = {
 const USER_COLLECTION_NAME = "users";
 const USER_COLLECTION_SCHEMA = Joi.object({
   email: Joi.string()
-    .required()
+    // .required()
     .pattern(EMAIL_RULE)
     .messages({ EMAIL_RULE_MESSAGE }),
-  password: Joi.string().required(),
+  password: Joi.string(), //.required(),
 
   username: Joi.string().required().trim().strict(),
   displayName: Joi.string().required().trim().strict(),
@@ -21,6 +21,9 @@ const USER_COLLECTION_SCHEMA = Joi.object({
   role: Joi.string()
     .valid(...Object.values(USER_ROLE))
     .default(USER_ROLE.CLIENT),
+  provider: Joi.string()
+    .valid("local", "google", "facebook", "github")
+    .default("local"),
 
   isActive: Joi.boolean().default(false),
   verifyToken: Joi.string(),
