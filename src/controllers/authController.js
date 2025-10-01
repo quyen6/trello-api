@@ -30,9 +30,7 @@ const login = async (req, res, next) => {
       env.BUILD_MODE === "dev"
         ? env.WEBSITE_DOMAIN_DEVELOPMENT
         : env.WEBSITE_DOMAIN_PRODUCTION;
-    res.redirect(
-      `${redirectDomain}/login/oauth-success?email=${result.user.email}`
-    );
+    res.redirect(`${redirectDomain}/login/oauth-success`);
   } catch (error) {
     next(error);
   }
