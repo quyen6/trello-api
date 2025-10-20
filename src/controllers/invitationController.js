@@ -34,11 +34,13 @@ const updateBoardInvitation = async (req, res, next) => {
     const userId = req.jwtDecoded._id;
     const { invitationId } = req.params;
     const { status } = req.body;
+    const { inviteeRole } = req.body;
     // Điều hướng dữ liệu sang tầng Service
     const resInvitations = await invitationService.updateBoardInvitation(
       userId,
       invitationId,
-      status
+      status,
+      inviteeRole
     );
 
     // Có kết quả thì trả về Client

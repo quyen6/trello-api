@@ -14,6 +14,15 @@ import cookieParser from "cookie-parser";
 import socketIo from "socket.io";
 import http from "http";
 import { inviteUserToBoardSocket } from "./sockets/inviteUserToBoardSocket";
+import { memberJoinBoardSocket } from "./sockets/memberJoinBoardSocket";
+import { changeRoleOrKickLeaveSocket } from "./sockets/changeRoleOrKickLeaveSocket";
+import { commentCardSocket } from "./sockets/commentCardSocket";
+import { createNewColumnSocket } from "./sockets/createNewColumnSocket";
+import { deleteColumnSocket } from "./sockets/deleteColumnSocket";
+import { createNewCardSocket } from "./sockets/createNewCardSocket";
+import { moveColumnSocket } from "./sockets/moveColumnSocket";
+import { moveCardInTheSameColumnSocket } from "./sockets/moveCardInTheSameColumn";
+import { moveCardTODifferentColumnSocket } from "./sockets/moveCardToDifferentColumn";
 
 const START_SERVER = () => {
   const app = express();
@@ -48,6 +57,17 @@ const START_SERVER = () => {
   io.on("connection", (socket) => {
     // Gọi các socket tùy theo tính năng ở đây
     inviteUserToBoardSocket(socket);
+    memberJoinBoardSocket(socket);
+    changeRoleOrKickLeaveSocket(socket);
+    createNewColumnSocket(socket);
+    deleteColumnSocket(socket);
+    createNewCardSocket(socket);
+    commentCardSocket(socket);
+
+    // move
+    moveColumnSocket(socket);
+    moveCardInTheSameColumnSocket(socket);
+    moveCardTODifferentColumnSocket(socket);
   });
 
   app.get("/", (req, res) => {

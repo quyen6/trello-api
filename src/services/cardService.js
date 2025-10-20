@@ -4,13 +4,13 @@ import { columnModel } from "~/models/columnModel";
 import { CloudinaryProvider } from "~/providers/CloundinaryProvider";
 // import { cloneDeep } from "lodash";
 
-const createNew = async (reqBody) => {
+const createNew = async (reqBody, userId) => {
   try {
     const newCard = {
       ...reqBody,
     };
 
-    const createdCard = await cardModel.createNew(newCard);
+    const createdCard = await cardModel.createNew(newCard, userId);
 
     const getNewCard = await cardModel.findOneById(createdCard.insertedId);
 

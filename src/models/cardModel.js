@@ -54,7 +54,7 @@ const validateBeforeCreate = async (data) => {
   });
 };
 
-const createNew = async (data) => {
+const createNew = async (data, userId) => {
   try {
     const validData = await validateBeforeCreate(data);
     // Biến đổi 1 số dữ liệu liên quan tới ObjectId chuẩn chỉnh
@@ -62,7 +62,10 @@ const createNew = async (data) => {
       ...validData,
       boardId: new ObjectId(validData.boardId),
       columnId: new ObjectId(validData.columnId),
+      // memberIds: [new ObjectId(userId)],
+      memberIds: [userId],
     };
+
     const createdCard = await GET_DB()
       .collection(CARD_COLLECTION_NAME)
       .insertOne(newCardToAdd);
@@ -123,6 +126,19 @@ const deleteAllCardByColumnId = async (columnId) => {
     throw new Error(error);
   }
 };
+const deleteAllCardByBoardId = async (boardId) => {
+  try {
+    const result = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .deleteMany({
+        boardId: new ObjectId(boardId),
+      });
+
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 /**
  * Đầy một phần tử comment vào đầu mảng comments!
  * - Trong JS, ngược lại với push (thêm phần tử vào cuối mảng) sẽ là unshift (thêm phần tử vào đầu mảng)
@@ -153,12 +169,14 @@ const updateMembers = async (cardId, incomingMemberInfo) => {
     let updateCondition = {};
     if (incomingMemberInfo.action === CARD_MEMBER_ACTIONS.ADD) {
       updateCondition = {
-        $push: { memberIds: new ObjectId(incomingMemberInfo.userId) },
+        // $push: { memberIds: new ObjectId(incomingMemberInfo.userId) },
+        $push: { memberIds: incomingMemberInfo.userId },
       };
     }
     if (incomingMemberInfo.action === CARD_MEMBER_ACTIONS.REMOVE) {
       updateCondition = {
-        $pull: { memberIds: new ObjectId(incomingMemberInfo.userId) },
+        // $pull: { memberIds: new ObjectId(incomingMemberInfo.userId) },
+        $pull: { memberIds: incomingMemberInfo.userId },
       };
     }
 
@@ -167,6 +185,7 @@ const updateMembers = async (cardId, incomingMemberInfo) => {
       .findOneAndUpdate({ _id: new ObjectId(cardId) }, updateCondition, {
         returnDocument: "after",
       });
+    console.log("🚀 ~ updateMembers ~ result:", result);
     return result;
   } catch (error) {
     throw new Error(error);
@@ -180,6 +199,7 @@ export const cardModel = {
   findOneById,
   update,
   deleteAllCardByColumnId,
+  deleteAllCardByBoardId,
   unshiftNewComment,
   updateMembers,
 };

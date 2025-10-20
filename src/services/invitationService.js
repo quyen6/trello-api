@@ -16,13 +16,14 @@ const createNewBoardInvitation = async (reqBody, inviterId) => {
     const invitee = await userModel.findOneByEmail(reqBody.inviteeEmail);
     // Tìm luôn Board để lấy data xử lý
     const board = await boardModel.findOneById(reqBody.boardId);
-    console.log("🚀 ~ createNewBoardInvitation ~ board:", board);
-
     if (!invitee || !inviter || !board) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
         "Inviter, Invitee, Board not found!"
       );
+    }
+    if (board.memberIds.some((m) => m.userId === invitee._id)) {
+      throw new ApiError(StatusCodes.CONFLICT, "You already joined this board");
     }
 
     // Tạo data cần thiết để lưu vào DB
@@ -30,6 +31,7 @@ const createNewBoardInvitation = async (reqBody, inviterId) => {
     const newInvitationData = {
       inviterId,
       inviteeId: invitee._id.toString(), // chuyển từ obectId sang string vì sang bên Model có check lại dât ở hàm create
+      inviteeRole: reqBody.inviteeRole,
       type: INVITATION_TYPES.BOARD_INVITATION,
       boardInvitation: {
         boardId: board._id.toString(),
@@ -60,7 +62,7 @@ const createNewBoardInvitation = async (reqBody, inviterId) => {
 const getInvitations = async (userId) => {
   try {
     const getInvitations = await invitationModel.findByUser(userId);
-    console.log("🚀 ~ getInvitations ~ getInvitations:", getInvitations);
+    // console.log("🚀 ~ getInvitations ~ getInvitations:", getInvitations);
 
     //Vì các dữ liệu inviter, invitee và board là đang ở giá trị mảng 1 phần tử nếu lấy ra được nên ta biến đổi nó về json object trước khi trả về cho phía FE
     const resInvitations = getInvitations.map((i) => {
@@ -77,7 +79,12 @@ const getInvitations = async (userId) => {
     throw error;
   }
 };
-const updateBoardInvitation = async (userId, invitationId, status) => {
+const updateBoardInvitation = async (
+  userId,
+  invitationId,
+  status,
+  inviteeRole
+) => {
   try {
     const getInvitation = await invitationModel.findOneById(invitationId);
     if (!getInvitation)
@@ -92,12 +99,13 @@ const updateBoardInvitation = async (userId, invitationId, status) => {
     // Kiểm tra xem nế status là ACCEPTED join board mà cái thằng user(invitee) đã là owner hoặc member của board rồi thì trả về thông báo lỗi
     // Note: 2 mảng memberIds và ownerIds của board nó đang là kiểu dữ liệu ObjectId nên cho nó về String
     const boardOwnerAndMemberIds = [
-      ...getBoard.ownerIds,
-      ...getBoard.memberIds,
+      // ...getBoard.ownerIds,
+      ...getBoard.memberIds.map((m) => m.userId?.toString()),
     ].toString();
+
     if (
       status === BOARD_INVITATION_STATUS.ACCEPTED &&
-      boardOwnerAndMemberIds.includes(userId)
+      boardOwnerAndMemberIds.includes(userId.toString())
     ) {
       throw new ApiError(
         StatusCodes.NOT_ACCEPTABLE,
@@ -119,13 +127,14 @@ const updateBoardInvitation = async (userId, invitationId, status) => {
     );
 
     // Bước 2: Nếu trường hợp Accept một lời mời thành công, thì phải thêm thông tin của thằng user(userId) vào bản ghi memberIds trong collection board
-    if (
-      updatedInvitation.boardInvitation.status ===
-      BOARD_INVITATION_STATUS.ACCEPTED
-    ) {
-      await boardModel.pushMemberIds(boardId, userId);
-    }
+    // if (
+    //   updatedInvitation.boardInvitation.status ===
+    //   BOARD_INVITATION_STATUS.ACCEPTED
+    // ) {
+    //  const  updatedBoard = await boardModel.pushMemberIds(boardId, userId, inviteeRole);
 
+    // }
+    // đã chuyển sang socket
     return updatedInvitation;
   } catch (error) {
     throw error;

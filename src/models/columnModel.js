@@ -114,6 +114,19 @@ const deleteOneById = async (columnId) => {
     throw new Error(error);
   }
 };
+const deleteManyByBoardId = async (boardId) => {
+  try {
+    const result = await GET_DB()
+      .collection(COLUMN_COLLECTION_NAME)
+      .deleteMany({
+        boardId: new ObjectId(boardId),
+      });
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 export const columnModel = {
   COLUMN_COLLECTION_NAME,
   COLUMN_COLLECTION_SCHEMA,
@@ -122,4 +135,5 @@ export const columnModel = {
   pushCardOrderIds,
   update,
   deleteOneById,
+  deleteManyByBoardId,
 };

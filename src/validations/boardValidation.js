@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { StatusCodes } from "http-status-codes";
 import ApiError from "~/utils/ApiError";
-import { BOARD_TYPE } from "~/utils/constants";
+import { BOARD_TYPE, CHANGE_ROLE_USER_OR_KICK_LEAVE } from "~/utils/constants";
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
 
 const createNew = async (req, res, next) => {
@@ -107,9 +107,59 @@ const moveCardToDifferentColumn = async (req, res, next) => {
     );
   }
 };
+const deleteItem = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    id: Joi.string()
+      .required()
+      .pattern(OBJECT_ID_RULE)
+      .message(OBJECT_ID_RULE_MESSAGE),
+  });
 
+  try {
+    // Chỉ định abortEarly: false trong trường hợp nhiều lỗi Validation thì trả về tất cả lỗi
+    await correctCondition.validateAsync(req.params);
+    next();
+  } catch (error) {
+    next(
+      new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message)
+    );
+  }
+};
+
+const updateRoleUserOrRemoveUser = async (req, res, next) => {
+  const paramsSchema = Joi.object({
+    boardId: Joi.string()
+      .pattern(OBJECT_ID_RULE)
+      .message(OBJECT_ID_RULE_MESSAGE),
+
+    memberId: Joi.string()
+
+      .pattern(OBJECT_ID_RULE)
+      .message(OBJECT_ID_RULE_MESSAGE),
+  });
+  const bodySchema = Joi.object({
+    option: Joi.string().valid(
+      CHANGE_ROLE_USER_OR_KICK_LEAVE.KICK,
+      CHANGE_ROLE_USER_OR_KICK_LEAVE.LEAVE,
+      CHANGE_ROLE_USER_OR_KICK_LEAVE.MANAGER,
+      CHANGE_ROLE_USER_OR_KICK_LEAVE.MEMBER
+    ),
+  });
+  try {
+    // Chỉ định abortEarly: false trong trường hợp nhiều lỗi Validation thì trả về tất cả lỗi
+    await paramsSchema.validateAsync(req.params, { abortEarly: false });
+    await bodySchema.validateAsync(req.body, { abortEarly: false });
+    next();
+  } catch (error) {
+    next(
+      new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message)
+    );
+  }
+};
 export const boardValidation = {
   createNew,
   update,
   moveCardToDifferentColumn,
+  deleteItem,
+  updateRoleUserOrRemoveUser,
 };

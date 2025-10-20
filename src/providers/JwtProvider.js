@@ -21,7 +21,7 @@ const generateToken = async (userInfo, secretSignature, tokenLife) => {
  *Function kiểm tra một token có hợp lệ hay không
  *Hợp lệ ở đây hiểu đơn giản là cái token được tạo ra có đúng với các chữ kí bí mật seccretSignature trong dự án hay không
  */
-const verifyToken = (token, secretSignature) => {
+const verifyToken = async (token, secretSignature) => {
   try {
     // Hàm verify của Jwt
     return JWT.verify(token, secretSignature);

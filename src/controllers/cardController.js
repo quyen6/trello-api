@@ -4,7 +4,8 @@ import { cardService } from "~/services/cardService";
 const createNew = async (req, res, next) => {
   try {
     // Điều hướng dữ liệu sang tầng Service
-    const createNewCard = await cardService.createNew(req.body);
+    const userInfo = req.jwtDecoded;
+    const createNewCard = await cardService.createNew(req.body, userInfo._id);
 
     // Có kết quả thì trả về Client
     res.status(StatusCodes.CREATED).json(createNewCard);
