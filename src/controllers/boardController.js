@@ -71,10 +71,43 @@ const getBoards = async (req, res, next) => {
     next(error);
   }
 };
+const deleteItem = async (req, res, next) => {
+  try {
+    const boardId = req.params.id;
+
+    const result = await boardService.deleteItem(boardId);
+
+    // Có kết quả thì trả về Client
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateRoleUserOrRemoveUser = async (req, res, next) => {
+  try {
+    const boardId = req.params.boardId;
+    const memberId = req.params.memberId;
+    const option = req.body.option;
+
+    const result = await boardService.updateRoleUserOrRemoveUser(
+      boardId,
+      memberId,
+      option
+    );
+
+    // Có kết quả thì trả về Client
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 export const boardController = {
   createNew,
   getDetails,
   update,
   moveCardToDifferentColumn,
   getBoards,
+  deleteItem,
+  updateRoleUserOrRemoveUser,
 };

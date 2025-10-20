@@ -1,7 +1,11 @@
 import Joi from "joi";
 import { ObjectId } from "mongodb";
 import { GET_DB } from "~/config/mongodb";
-import { BOARD_INVITATION_STATUS, INVITATION_TYPES } from "~/utils/constants";
+import {
+  BOARD_INVITATION_STATUS,
+  INVITATION_TYPES,
+  ROLE_USER,
+} from "~/utils/constants";
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
 import { userModel } from "./userModel";
 import { boardModel } from "./boardModel";
@@ -16,7 +20,9 @@ const INVITATION_COLLECTION_SCHEMA = Joi.object({
     .required()
     .pattern(OBJECT_ID_RULE)
     .messages({ OBJECT_ID_RULE_MESSAGE }),
-
+  inviteeRole: Joi.string()
+    .required()
+    .valid(...Object.values(ROLE_USER)),
   // Kiểu của cái lời mời: mời vào board, mời vào workspace,...
   type: Joi.string()
     .required()

@@ -1,12 +1,13 @@
 import Joi from "joi";
 import { ObjectId } from "mongodb";
 import { GET_DB } from "~/config/mongodb";
-import { BOARD_TYPE } from "~/utils/constants";
+import { BOARD_TYPE, ROLE_USER } from "~/utils/constants";
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
 import { columnModel } from "~/models/columnModel";
 import { cardModel } from "~/models/cardModel";
 import { pagingSkipValue } from "~/utils/algorithms";
 import { userModel } from "./userModel";
+
 // Define Collection (name & Schema)
 
 const BOARD_COLLECTION_NAME = "boards";
@@ -21,14 +22,28 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
     .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
     .default([]),
   // Những Admin của Board
-  ownerIds: Joi.array()
-    .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
-    .default([]),
+  // ownerIds: Joi.array()
+  //   .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
+  //   .default([]),
   // Những thành viên của Board
   memberIds: Joi.array()
-    .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
-    .default([]),
+    .items(
+      Joi.object({
+        userId: Joi.string()
+          .pattern(OBJECT_ID_RULE)
+          .message(OBJECT_ID_RULE_MESSAGE)
+          .required(),
+        role: Joi.string()
+          .valid(...Object.values(ROLE_USER))
+          .default(ROLE_USER.MEMBER),
+      })
+    )
+    .min(1), // Ít nhất phải có 1 thành viên
+  // .required(), // Bắt buộc phải truyền mảng này vào khi tạo board,
+  // .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
+  // .default([]),
 
+  backgroundColor: Joi.string().default("#0088ff"),
   createdAt: Joi.date().timestamp("javascript").default(Date.now),
   updatedAt: Joi.date().timestamp("javascript").default(null),
   _destroy: Joi.boolean().default(false),
@@ -48,7 +63,7 @@ const createNew = async (userId, data) => {
     const validData = await validateBeforeCreate(data);
     const newBoardToAdd = {
       ...validData,
-      ownerIds: [new ObjectId(userId)],
+      memberIds: [{ userId: new ObjectId(userId), role: ROLE_USER.ADMIN }],
     };
 
     const createdBoard = await GET_DB()
@@ -72,19 +87,20 @@ const findOneById = async (boardId) => {
   }
 };
 //Query tổng hợp (aggregate) để lấy toàn bộ Columns và Cards thuộc về Board
-const getDetails = async (userId, boardId) => {
+const getDetails = async (boardId) => {
   try {
     const queryConditons = [
       { _id: new ObjectId(boardId) },
       // Điều kiện 01: Board chưa bị xóa
       { _destroy: false },
       // Điều kiện thứ 02: userId đang thực hiện request này nó phải thuộc vào một trong 2 cái mảng ownerIds hoặc memberIds, sư dụng toán từ $all của mongodb
-      {
-        $or: [
-          { ownerIds: { $all: [new ObjectId(userId)] } },
-          { memberIds: { $all: [new ObjectId(userId)] } },
-        ],
-      },
+      // Điều kiện thứ 02: userId đang thực hiện request này có Id nó phải thuộc cái mảng memberIds.userId
+      // {
+      //   $or: [
+      //     // { ownerIds: { $all: [new ObjectId(userId)] } },
+      //     { "memberIds.userId": new ObjectId(userId) },
+      //   ],
+      // },
     ];
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
@@ -110,24 +126,60 @@ const getDetails = async (userId, boardId) => {
             as: "cards",
           },
         },
+        // {
+        //   $lookup: {
+        //     from: userModel.USER_COLLECTION_NAME,
+        //     localField: "ownerIds",
+        //     foreignField: "_id",
+        //     as: "owners",
+        //     // pipeline trong lookup là để xử lý một hoặc nhiều luồng cần thiết
+        //     // $project để chỉ định vài field không muốn lấy về băng cách gán nó giá trị 0
+        //     pipeline: [{ $project: { password: 0, verifyToken: 0 } }],
+        //   },
+        // },
+        // {
+        //   $lookup: {
+        //     from: userModel.USER_COLLECTION_NAME,
+        //     localField: "memberIds",
+        //     foreignField: "_id",
+        //     as: "members",
+        //     pipeline: [{ $project: { password: 0, verifyToken: 0 } }],
+        //   },
+        // },
         {
           $lookup: {
             from: userModel.USER_COLLECTION_NAME,
-            localField: "ownerIds",
-            foreignField: "_id",
-            as: "owners",
-            // pipeline trong lookup là để xử lý một hoặc nhiều luồng cần thiết
-            // $project để chỉ định vài field không muốn lấy về băng cách gán nó giá trị 0
-            pipeline: [{ $project: { password: 0, verifyToken: 0 } }],
-          },
-        },
-        {
-          $lookup: {
-            from: userModel.USER_COLLECTION_NAME,
-            localField: "memberIds",
-            foreignField: "_id",
+            let: { members: "$memberIds" },
+            pipeline: [
+              {
+                $set: {
+                  role: {
+                    $first: {
+                      $map: {
+                        input: {
+                          $filter: {
+                            input: "$$members",
+                            as: "m",
+                            cond: { $eq: ["$$m.userId", "$_id"] },
+                          },
+                        },
+                        as: "m",
+                        in: "$$m.role",
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                $match: {
+                  role: { $exists: true }, // chỉ giữ lại những user có trong memberIds
+                },
+              },
+              {
+                $project: { password: 0, verifyToken: 0 },
+              },
+            ],
             as: "members",
-            pipeline: [{ $project: { password: 0, verifyToken: 0 } }],
           },
         },
       ])
@@ -205,10 +257,11 @@ const getBoards = async (userId, page, itemsPerPage, queryFilters) => {
       // Điều kiện 01: Board chưa bị xóa
       { _destroy: false },
       // Điều kiện thứ 02: userId đang thực hiện request này nó phải thuộc vào một trong 2 cái mảng ownerIds hoặc memberIds, sư dụng toán từ $all của mongodb
+      // Điều kiện thứ 02: userId đang thực hiện request này có Id nó phải thuộc cái mảng memberIds.userId
       {
         $or: [
-          { ownerIds: { $all: [new ObjectId(userId)] } },
-          { memberIds: { $all: [new ObjectId(userId)] } },
+          // { ownerIds: { $all: [new ObjectId(userId)] } },
+          { "memberIds.userId": new ObjectId(userId) },
         ],
       },
     ];
@@ -267,13 +320,68 @@ const getBoards = async (userId, page, itemsPerPage, queryFilters) => {
   }
 };
 
-const pushMemberIds = async (boardId, userId) => {
+const pushMemberIds = async (boardId, userId, inviteeRole) => {
   try {
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
       .findOneAndUpdate(
         { _id: new ObjectId(boardId) },
-        { $push: { memberIds: new ObjectId(userId) } },
+        {
+          $push: {
+            memberIds: {
+              userId: new ObjectId(userId),
+              role: inviteeRole,
+            },
+          },
+        },
+        { returnDocument: "after" }
+      );
+    // console.log("🚀 ~ pushMemberIds ~ result:", result);
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+const deleteOneById = async (boardId) => {
+  try {
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .deleteOne({
+        _id: new ObjectId(boardId),
+      });
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+const updateListMember = async (boardId, memberId) => {
+  try {
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        {
+          _id: new ObjectId(boardId),
+        },
+        {
+          $pull: {
+            // memberIds: { userId: new ObjectId(memberId) },
+            memberIds: { userId: new ObjectId(memberId) },
+          },
+        },
+        { returnDocument: "after" }
+      );
+    await GET_DB()
+      .collection(cardModel.CARD_COLLECTION_NAME)
+      .updateMany(
+        {
+          boardId: new ObjectId(boardId),
+        },
+        {
+          $pull: {
+            // memberIds: new ObjectId(memberId),
+            memberIds: memberId,
+          },
+        },
         { returnDocument: "after" }
       );
     return result;
@@ -292,4 +400,6 @@ export const boardModel = {
   pullColumnOrderIds,
   getBoards,
   pushMemberIds,
+  deleteOneById,
+  updateListMember,
 };

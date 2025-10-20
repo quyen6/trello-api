@@ -14,12 +14,22 @@ Router.route("/")
     boardController.createNew
   );
 
+Router.route("/:boardId/members/:memberId").put(
+  authMiddleware.isAuthorized,
+  boardValidation.updateRoleUserOrRemoveUser,
+  boardController.updateRoleUserOrRemoveUser
+);
 Router.route("/:id")
   .get(authMiddleware.isAuthorized, boardController.getDetails)
   .put(
     authMiddleware.isAuthorized,
     boardValidation.update,
     boardController.update
+  )
+  .delete(
+    authMiddleware.isAuthorized,
+    boardValidation.deleteItem,
+    boardController.deleteItem
   );
 
 // API di chuyển card giữa các column khác nhau trong 1 board

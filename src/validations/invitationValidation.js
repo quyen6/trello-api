@@ -6,6 +6,7 @@ const createNewBoardInvitation = async (req, res, next) => {
   const correctCondition = Joi.object({
     boardId: Joi.string().required(),
     inviteeEmail: Joi.string().required(),
+    inviteeRole: Joi.string().required(),
   });
 
   try {

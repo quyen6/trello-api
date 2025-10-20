@@ -3,10 +3,10 @@ import { ObjectId } from "mongodb";
 import { GET_DB } from "~/config/mongodb";
 import { EMAIL_RULE, EMAIL_RULE_MESSAGE } from "~/utils/validators";
 
-const USER_ROLE = {
-  CLIENT: "client",
-  ADMIN: "admin",
-};
+// const USER_ROLE = {
+//   CLIENT: "client",
+//   ADMIN: "admin",
+// };
 const USER_COLLECTION_NAME = "users";
 const USER_COLLECTION_SCHEMA = Joi.object({
   email: Joi.string()
@@ -18,9 +18,9 @@ const USER_COLLECTION_SCHEMA = Joi.object({
   username: Joi.string().required().trim().strict(),
   displayName: Joi.string().required().trim().strict(),
   avatar: Joi.string().default(null),
-  role: Joi.string()
-    .valid(...Object.values(USER_ROLE))
-    .default(USER_ROLE.CLIENT),
+  // role: Joi.string()
+  //   .valid(...Object.values(USER_ROLE))
+  //   .default(USER_ROLE.CLIENT),
   provider: Joi.string()
     .valid("local", "google", "facebook", "github")
     .default("local"),
